@@ -2,48 +2,20 @@
 const WHATSAPP_NUMBER = "923121106924";
 
 const products = [
-  {
-    id: 1, category: "men", name: "Classic Shirt",
-    price: 1800, image: "images/men-shirt.jpg"
-  },
-  {
-    id: 2, category: "men", name: "Everyday T-Shirt",
-    price: 1200, image: "images/men-tshirt.jpg"
-  },
-  {
-    id: 3, category: "men", name: "Casual Hoodie",
-    price: 2500, image: "images/men-hoodie.jpg"
-  },
-  {
-    id: 4, category: "women", name: "Classic Dress",
-    price: 2800, image: "images/women-dress.jpg"
-  },
-  {
-    id: 5, category: "women", name: "Everyday Top",
-    price: 1500, image: "images/women-top.jpg"
-  },
-  {
-    id: 6, category: "women", name: "Casual Outfit",
-    price: 3200, image: "images/women-outfit.jpg"
-  },
-  {
-    id: 7, category: "kids", name: "Kids T-Shirt",
-    price: 900, image: "images/kids-tshirt.jpg"
-  },
-  {
-    id: 8, category: "kids", name: "Kids Outfit",
-    price: 1600, image: "images/kids-outfit.jpg"
-  },
-  {
-    id: 9, category: "kids", name: "Kids Hoodie",
-    price: 1900, image: "images/kids-hoodie.jpg"
-  }
+  { id: 1, category: "men", name: "Classic Shirt", price: 1800, image: "Images/men-shirt.jpg" },
+  { id: 2, category: "men", name: "Everyday T-Shirt", price: 1200, image: "Images/men-tshirt.jpg" },
+  { id: 3, category: "men", name: "Casual Hoodie", price: 2500, image: "Images/men-hoodie.jpg" },
+  { id: 4, category: "women", name: "Classic Dress", price: 2800, image: "Images/women-dress.jpg" },
+  { id: 5, category: "women", name: "Everyday Top", price: 1500, image: "Images/women-top.jpg" },
+  { id: 6, category: "women", name: "Casual Outfit", price: 3200, image: "Images/women-outfit.jpg" },
+  { id: 7, category: "kids", name: "Kids T-Shirt", price: 900, image: "Images/kids-tshirt.jpg" },
+  { id: 8, category: "kids", name: "Kids Outfit", price: 1600, image: "Images/kids-outfit.jpg" },
+  { id: 9, category: "kids", name: "Kids Hoodie", price: 1900, image: "Images/kids-hoodie.jpg" }
 ];
 
 const cart = [];
 
-const formatPrice = amount =>
-  "PKR " + amount.toLocaleString("en-PK");
+const formatPrice = amount => "PKR " + amount.toLocaleString("en-PK");
 
 function renderProducts() {
   const sections = {
@@ -54,6 +26,8 @@ function renderProducts() {
 
   products.forEach(product => {
     const container = sections[product.category];
+    if (!container) return;
+
     const card = document.createElement("article");
     card.className = "product-card";
 
@@ -67,8 +41,7 @@ function renderProducts() {
 
     const placeholder = document.createElement("div");
     placeholder.className = "image-placeholder";
-    placeholder.innerHTML =
-      "<strong>N.</strong><span>Your photo will appear here</span>";
+    placeholder.innerHTML = "<strong>N.</strong><span>Your photo will appear here</span>";
 
     img.addEventListener("load", () => {
       imageArea.classList.remove("image-missing");
@@ -77,6 +50,7 @@ function renderProducts() {
     img.addEventListener("error", () => {
       imageArea.classList.add("image-missing");
       img.style.display = "none";
+      console.error("Could not load image:", product.image);
     });
 
     imageArea.append(img, placeholder);
@@ -101,13 +75,12 @@ function renderProducts() {
     const sizeSelect = document.createElement("select");
     sizeSelect.setAttribute("aria-label", product.name + " size");
 
-    const sizeOptions = product.category === "kids"
+    const sizes = product.category === "kids"
       ? ["2-3Y", "4-5Y", "6-7Y", "8-10Y"]
       : ["S", "M", "L", "XL", "XXL"];
 
     sizeSelect.add(new Option("Choose size", ""));
-    sizeOptions.forEach(size => sizeSelect.add(new Option(size, size)));
-    sizeSelect.required = true;
+    sizes.forEach(size => sizeSelect.add(new Option(size, size)));
 
     const quantitySelect = document.createElement("select");
     quantitySelect.setAttribute("aria-label", product.name + " quantity");
@@ -127,18 +100,14 @@ function renderProducts() {
       if (!sizeSelect.value) {
         sizeSelect.setCustomValidity("Please choose a size.");
         sizeSelect.reportValidity();
-        sizeSelect.addEventListener(
-          "change",
-          () => sizeSelect.setCustomValidity(""),
-          { once: true }
-        );
         return;
       }
 
-      const quantity = Number(quantitySelect.value);
       const existing = cart.find(item =>
         item.id === product.id && item.size === sizeSelect.value
       );
+
+      const quantity = Number(quantitySelect.value);
 
       if (existing) {
         existing.quantity += quantity;
@@ -158,6 +127,10 @@ function renderProducts() {
       }, 1200);
     });
 
+    sizeSelect.addEventListener("change", () => {
+      sizeSelect.setCustomValidity("");
+    });
+
     info.append(category, title, price, options, addButton);
     card.append(imageArea, info);
     container.appendChild(card);
@@ -169,9 +142,7 @@ function renderCart() {
   itemsContainer.replaceChildren();
 
   const count = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const total = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity, 0
-  );
+  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   document.getElementById("cartCount").textContent = count;
   document.getElementById("cartTotal").textContent = formatPrice(total);
@@ -189,13 +160,13 @@ function renderCart() {
     row.className = "cart-item";
 
     const details = document.createElement("div");
+
     const title = document.createElement("p");
     title.textContent = item.name;
 
     const meta = document.createElement("p");
     meta.className = "cart-item-meta";
-    meta.textContent =
-      "Size: " + item.size + " · Qty: " + item.quantity;
+    meta.textContent = `Size: ${item.size} · Qty: ${item.quantity}`;
 
     const price = document.createElement("p");
     price.textContent = formatPrice(item.price * item.quantity);
@@ -236,16 +207,13 @@ document.getElementById("cartOverlay").addEventListener("click", closeCart);
 document.getElementById("menuButton").addEventListener("click", () => {
   const nav = document.getElementById("navLinks");
   const isOpen = nav.classList.toggle("open");
-
-  document.getElementById("menuButton")
-    .setAttribute("aria-expanded", String(isOpen));
+  document.getElementById("menuButton").setAttribute("aria-expanded", String(isOpen));
 });
 
 document.querySelectorAll("#navLinks a").forEach(link => {
   link.addEventListener("click", () => {
     document.getElementById("navLinks").classList.remove("open");
-    document.getElementById("menuButton")
-      .setAttribute("aria-expanded", "false");
+    document.getElementById("menuButton").setAttribute("aria-expanded", "false");
   });
 });
 
@@ -256,13 +224,10 @@ document.getElementById("checkoutButton").addEventListener("click", () => {
   }
 
   const lines = cart.map(item =>
-    `${item.name} | Size: ${item.size} | Qty: ${item.quantity} | ` +
-    formatPrice(item.price * item.quantity)
+    `${item.name} | Size: ${item.size} | Qty: ${item.quantity} | ${formatPrice(item.price * item.quantity)}`
   );
 
-  const total = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity, 0
-  );
+  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const message = [
     "Hello NAVAAN! I would like to place an order:",
@@ -274,8 +239,7 @@ document.getElementById("checkoutButton").addEventListener("click", () => {
     "Please confirm availability, delivery charges and payment details."
   ].join("\n");
 
-  const whatsappURL =
-    "https://wa.me/" + WHATSAPP_NUMBER +
+  const whatsappURL = "https://wa.me/" + WHATSAPP_NUMBER +
     "?text=" + encodeURIComponent(message);
 
   window.open(whatsappURL, "_blank", "noopener,noreferrer");
